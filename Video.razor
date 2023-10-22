@@ -1,0 +1,133 @@
+﻿@using MudBlazor
+@using Microsoft.JSInterop
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using VideoNet.Helper
+@implements IAsyncDisposable
+@inject IJSRuntime JSRuntime
+
+<MudPaper Elevation="0" Height="@Height" Width="@Width" Class="@(Class + " ytd-player relative d-flex align-center justify-center")"
+          @onclick="@(async () => await onclick())" id="cleanupDiv">
+    <div class="html5-video-container">
+        <video id="@uuid" controlslist="nodownload" poster="@Sources.Poster"
+               @ontimeupdate="@ontimeupdate" @onloadeddata="@onloadeddata" @onended="@onended">
+            @for (int i = 0; i < Sources.Sources.Length; i++)
+            {
+                <source src="@Sources.Sources[i]" type="@Sources.types[i]">
+            }
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <div class="ytd-setting">
+    </div>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public Media Sources { get; set; }
+
+    [Parameter]
+    public string Height { get; set; }
+
+    [Parameter]
+    public Media[] PlayList { get; set; }
+
+    [Parameter]
+    public string Width { get; set; }
+
+    [Parameter]
+    public string Class { get; set; }
+
+    private string uuid { get; set; }
+
+    private IJSObjectReference? jsModule;
+    private Setting setting = new Setting();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/VideoNet/Video.razor.js");
+            await jsModule.InvokeVoidAsync("DOMCleanup.createObserver");
+            if (PlayList is not null)
+            {
+                Sources = PlayList.First();
+            }
+            if (uuid is null)
+            {
+                Guid myuuid = Guid.NewGuid();
+                uuid = myuuid.ToString();
+            }
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (jsModule is not null)
+        {
+            await jsModule.DisposeAsync();
+        }
+    }
+
+    #region VideoEventListener
+
+    private async Task onclick()
+    {
+        if (setting.IsPlaying) await Pause();
+        else
+        {
+            await Play();
+        }
+    }
+
+    private async Task ontimeupdate()
+    {
+        await GetVideoInfo();
+    }
+
+    private async Task onloadeddata()
+    {
+        await GetVideoInfo();
+    }
+
+    private async Task onended()
+    {
+        setting.IsPlaying = false;
+    }
+
+    private async Task Pause()
+    {
+        await jsModule.InvokeVoidAsync("videoEvents", $"{uuid}", "pause");
+        setting.IsPlaying = false;
+    }
+
+    private async Task Play()
+    {
+        await jsModule.InvokeVoidAsync("videoEvents", $"{uuid}", "play");
+        setting.IsPlaying = true;
+    }
+
+    private async Task GetVideoInfo()
+    {
+        if (jsModule is not null)
+        {
+            var info = await jsModule.InvokeAsync<string>("videoInfo", uuid);
+            if (info is not null)
+            {
+                if (info.Length > 0)
+                {
+                    Media? media = JsonSerializer.Deserialize<Media>(info);
+                }
+            }
+        }
+    }
+
+    #endregion
+
+}
