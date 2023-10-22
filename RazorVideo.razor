@@ -3,7 +3,7 @@
 @inject IJSRuntime JsRuntime
 
 <MudPaper Elevation="0" Height="@Height" Width="@Width" Class="@(Class + " ytd-player relative d-flex align-center justify-center")"
-          @onclick="@(async () => await Onclick())" id="cleanupDiv">
+          @onclick="@(async () => await Onclick())" id="@_rootUuid">
     <div class="html5-video-container">
         <video id="@Uuid" controlslist="nodownload" poster="@Sources.Poster"
                @ontimeupdate="@OnTimeUpdate" @onloadeddata="@OnLoadedData" @onended="@OneEnded">
@@ -39,6 +39,7 @@
     public string? Class { get; set; }
 
     private string? Uuid { get; set; }
+    private readonly string _rootUuid = Guid.NewGuid().ToString();
 
     private IJSObjectReference? _jsModule;
 
@@ -48,13 +49,13 @@
     {
         if (firstRender)
         {
+            Uuid ??= Guid.NewGuid().ToString();
             _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/RazorVideo/RazorVideo.razor.js");
-            await _jsModule.InvokeVoidAsync("DOMCleanup.createObserver");
+            await _jsModule.InvokeVoidAsync("DOMCleanup.createObserver", _rootUuid);
             if (PlayList is not null)
             {
                 Sources = PlayList.First();
             }
-            Uuid ??= Guid.NewGuid().ToString();
         }
     }
 

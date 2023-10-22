@@ -1,8 +1,8 @@
 ﻿export class DOMCleanup {
     static observer;
 
-    static createObserver() {
-        const target = document.querySelector('#cleanupDiv');
+    static createObserver(uuid) {
+        const target = document.querySelector(String.format("#%s", uuid));
 
         this.observer = new MutationObserver(function (mutations) {
             const targetRemoved = mutations.some(function (mutation) {
