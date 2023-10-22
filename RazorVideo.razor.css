@@ -1,0 +1,32 @@
+﻿.ytd-player {
+    display: block;
+    overflow: hidden;
+}
+
+.ytd-setting {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+}
+
+video {
+    max-height: 100%;
+    max-width: 100%;
+    -webkit-object-fit: cover;
+    object-fit: cover;
+    cursor: none;
+    outline: 0;
+}
+
+.html5-video-container {
+    display: flex;
+    -o-justify-content: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -ms-align-items: center;
+    -o-align-items: center;
+    -webkit-align-items: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}

@@ -1,0 +1,122 @@
+@using global::RazorVideo.Helper
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime
+
+<MudPaper Elevation="0" Height="@Height" Width="@Width" Class="@(Class + " ytd-player relative d-flex align-center justify-center")"
+          @onclick="@(async () => await Onclick())" id="cleanupDiv">
+    <div class="html5-video-container">
+        <video id="@Uuid" controlslist="nodownload" poster="@Sources.Poster"
+               @ontimeupdate="@OnTimeUpdate" @onloadeddata="@OnLoadedData" @onended="@OneEnded">
+            @for (int i = 0; i < Sources.Sources.Length; i++)
+            {
+                <source src="@Sources.Sources[i]" type="@Sources.types[i]">
+            }
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <div class="ytd-setting">
+    </div>
+</MudPaper>
+
+@code {
+
+    [Parameter]
+    public Media Sources { get; set; }
+
+    [Parameter]
+    public EventCallback<Media> SourcesChanged { get; set; }
+
+    [Parameter]
+    public string? Height { get; set; }
+
+    [Parameter]
+    public Media[]? PlayList { get; set; }
+
+    [Parameter]
+    public string? Width { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string? Uuid { get; set; }
+
+    private IJSObjectReference? _jsModule;
+
+    private readonly Setting _setting = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/RazorVideo/RazorVideo.razor.js");
+            await _jsModule.InvokeVoidAsync("DOMCleanup.createObserver");
+            if (PlayList is not null)
+            {
+                Sources = PlayList.First();
+            }
+            Uuid ??= Guid.NewGuid().ToString();
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            await _jsModule.DisposeAsync();
+        }
+    }
+
+    #region VideoEventListener
+
+    private async Task Onclick()
+    {
+        if (_setting.IsPlaying) await Pause();
+        else
+        {
+            await Play();
+        }
+    }
+
+    private async Task OnTimeUpdate()
+    {
+        await GetVideoInfo();
+    }
+
+    private async Task OnLoadedData()
+    {
+        await GetVideoInfo();
+    }
+
+    private Task OneEnded()
+    {
+        _setting.IsPlaying = false;
+        return Task.CompletedTask;
+    }
+
+    private async Task Pause()
+    {
+        if (_jsModule != null) await _jsModule.InvokeVoidAsync("videoEvents", $"{Uuid}", "pause");
+        _setting.IsPlaying = false;
+    }
+
+    private async Task Play()
+    {
+        if (_jsModule != null) await _jsModule.InvokeVoidAsync("videoEvents", $"{Uuid}", "play");
+        _setting.IsPlaying = true;
+    }
+
+    private async Task GetVideoInfo()
+    {
+        if (_jsModule is not null)
+        {
+            string info = await _jsModule.InvokeAsync<string>("videoInfo", Uuid);
+            if (info.Length > 0)
+            {
+                Media? media = JsonSerializer.Deserialize<Media>(info);
+            }
+        }
+    }
+
+    #endregion
+
+}
