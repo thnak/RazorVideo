@@ -2,10 +2,10 @@
     static observer;
 
     static createObserver(uuid) {
-        const target = document.querySelector(String.format("#%s", uuid));
+        const target = document.getElementById(uuid);
 
-        this.observer = new MutationObserver(function (mutations) {
-            const targetRemoved = mutations.some(function (mutation) {
+        this.observer = new MutationObserver(function(mutations) {
+            const targetRemoved = mutations.some(function(mutation) {
                 const nodes = Array.from(mutation.removedNodes);
                 return nodes.indexOf(target) !== -1;
             });
@@ -46,36 +46,36 @@ export function videoEvents(elementID, command) {
     const element = document.getElementById(elementID);
     if (element) {
         switch (command) {
-            case "play":
-                {
-                    if (element.paused) {
-                        element.play();
-                    }
-                    break;
-                }
-            case "pause":
-                {
-                    if (!element.paused) {
-                        element.pause();
-                    }
-                    break;
-                }
-            case "re-load":
-                {
-                    element.load();
-                    break;
-                }
-            case "reset":
-                {
-                    const source = video.childNodes;
-                    for (var i = 0; i < source.length; i++) {
-                        source[i].src = "";
-                    }
-                    element.src = "";
-                }
-            default:
-                {
-                }
+        case "play":
+        {
+            if (element.paused) {
+                element.play();
+            }
+            break;
+        }
+        case "pause":
+        {
+            if (!element.paused) {
+                element.pause();
+            }
+            break;
+        }
+        case "re-load":
+        {
+            element.load();
+            break;
+        }
+        case "reset":
+        {
+            const source = video.childNodes;
+            for (var i = 0; i < source.length; i++) {
+                source[i].src = "";
+            }
+            element.src = "";
+        }
+        default:
+        {
+        }
         }
     }
 

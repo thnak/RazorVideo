@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RazorVideo.Helper
+﻿namespace RazorVideo.Helper
 {
     public class Setting
     {
@@ -131,4 +125,4 @@ namespace RazorVideo.Helper
         }
     }
 }
-}
+

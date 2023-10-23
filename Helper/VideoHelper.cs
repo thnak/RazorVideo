@@ -39,7 +39,6 @@ namespace RazorVideo.Helper
             Poster = poster;
         }
 
-        private string[] _sources;
         public double Duration { get; set; }
 
         public TimeSpan DurationTimeSpan
@@ -69,14 +68,19 @@ namespace RazorVideo.Helper
             get { return $"{timeInSecToTimeString(CurrentTime)} / {timeInSecToTimeString(Duration)}"; }
         }
 
+        private string[] _sources;
+
         public string[] Sources
         {
             get => _sources;
 
             set
             {
-                var srcs = from src in _sources where !string.IsNullOrEmpty(src) select src;
-                _sources = srcs.ToArray();
+                if (value is not null)
+                {
+                    IEnumerable<string>? srcs = from src in value where !string.IsNullOrEmpty(src) select src;
+                    if(srcs.Any()) _sources = srcs.ToArray();
+                }
             }
         }
 
