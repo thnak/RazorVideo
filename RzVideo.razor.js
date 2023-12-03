@@ -4,8 +4,8 @@
     static createObserver(uuid) {
         const target = document.getElementById(uuid);
 
-        this.observer = new MutationObserver(function(mutations) {
-            const targetRemoved = mutations.some(function(mutation) {
+        this.observer = new MutationObserver(function (mutations) {
+            const targetRemoved = mutations.some(function (mutation) {
                 const nodes = Array.from(mutation.removedNodes);
                 return nodes.indexOf(target) !== -1;
             });
@@ -20,7 +20,7 @@
             }
         });
 
-        this.observer.observe(target.parentNode, { childList: true });
+        this.observer.observe(target.parentNode, {childList: true});
     }
 }
 
@@ -37,7 +37,9 @@ export async function VideoStreaming(elementID, imgStream) {
     for (var i = 0; i < childNodes.length; i++) {
         childNodes[i].src = url;
     }
-    video.onload = () => { URL.revokeObjectURL(url) }
+    video.onload = () => {
+        URL.revokeObjectURL(url)
+    }
     video.src = url;
     video.addEventListener("contextmenu", e => e.preventDefault());
 }
@@ -46,36 +48,31 @@ export function videoEvents(elementID, command) {
     const element = document.getElementById(elementID);
     if (element) {
         switch (command) {
-        case "play":
-        {
-            if (element.paused) {
-                element.play();
+            case "play": {
+                if (element.paused) {
+                    element.play();
+                }
+                break;
             }
-            break;
-        }
-        case "pause":
-        {
-            if (!element.paused) {
-                element.pause();
+            case "pause": {
+                if (!element.paused) {
+                    element.pause();
+                }
+                break;
             }
-            break;
-        }
-        case "re-load":
-        {
-            element.load();
-            break;
-        }
-        case "reset":
-        {
-            const source = video.childNodes;
-            for (var i = 0; i < source.length; i++) {
-                source[i].src = "";
+            case "re-load": {
+                element.load();
+                break;
             }
-            element.src = "";
-        }
-        default:
-        {
-        }
+            case "reset": {
+                const source = video.childNodes;
+                for (var i = 0; i < source.length; i++) {
+                    source[i].src = "";
+                }
+                element.src = "";
+            }
+            default: {
+            }
         }
     }
 
@@ -95,9 +92,12 @@ export async function videoInfo(elementID) {
     if (video) {
         var listSrc = [];
         const source = video.childNodes;
-        for (var i = 0; i < source.length; i++) {
-            listSrc.push(source[i].src);
-        }
+        source.forEach((e) => {
+            if (e.nodeName === "SOURCE") {
+                listSrc.push(e.src)
+            }
+        })
+        
         json["Duration"] = video.duration;
         json["BufferedEnd"] = video.buffered.end(0);
         json["BufferedStart"] = video.buffered.start(0);
@@ -106,12 +106,14 @@ export async function videoInfo(elementID) {
         json["Sources"] = listSrc;
         json["Poster"] = video.poster;
         json["Muted"] = video.muted;
-        json["Volumn"] = video.volume;
+        json["Volume"] = video.volume;
         json["Loop"] = video.loop;
         json["DefaultPlaybackRate"] = video.defaultPlaybackRate;
         json["Paused"] = video.paused;
         json["PlaybackRate"] = video.playbackRate;
-        console.log(JSON.stringify(json));
+        json["Dimension"] = {"Height": video.videoHeight, "Width": video.videoWidth};
+        console.log(json)
+        // console.log(JSON.stringify(json));
         return JSON.stringify(json);
 
     } else {

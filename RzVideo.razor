@@ -1,4 +1,5 @@
 @using global::RazorVideo.Helper
+@using JsonSerializer = Newtonsoft.Json.JsonSerializer
 @implements IAsyncDisposable
 @inject IJSRuntime JsRuntime
 
@@ -7,21 +8,25 @@
     <div class="html5-video-container">
         <video id="@Uuid" controlslist="nodownload" poster="@Sources.Poster"
                @ontimeupdate="@OnTimeUpdate" @onloadeddata="@OnLoadedData" @onended="@OneEnded">
-            @for (int i = 0; i < Sources.Sources.Length; i++)
+            @for (int i = 0; i < Sources.Sources!.Length; i++)
             {
                 <source src="@Sources.Sources[i]" type="@Sources.types[i]">
             }
             Your browser does not support the video tag.
         </video>
     </div>
-    <div class="ytd-setting">
-    </div>
+    @ChildContent
 </MudPaper>
 
 @code {
 
+    #region Properties
+
     [Parameter]
-    public Media Sources { get; set; }
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public required Media Sources { get; set; }
 
     [Parameter]
     public EventCallback<Media> SourcesChanged { get; set; }
@@ -39,33 +44,13 @@
     public string? Class { get; set; }
 
     private string? Uuid { get; set; }
-    private readonly string _rootUuid = Guid.NewGuid().ToString().Replace("-","_");
+    private readonly string _rootUuid = Guid.NewGuid().ToString().Replace("-", "_");
 
     private IJSObjectReference? _jsModule;
 
     private readonly Setting _setting = new();
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            Uuid ??= Guid.NewGuid().ToString();
-            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/RazorVideo/RazorVideo.razor.js");
-            await _jsModule.InvokeVoidAsync("DOMCleanup.createObserver", _rootUuid);
-            if (PlayList is not null)
-            {
-                Sources = PlayList.First();
-            }
-        }
-    }
-
-    async ValueTask IAsyncDisposable.DisposeAsync()
-    {
-        if (_jsModule is not null)
-        {
-            await _jsModule.DisposeAsync();
-        }
-    }
+    #endregion
 
     #region VideoEventListener
 
@@ -94,13 +79,13 @@
         return Task.CompletedTask;
     }
 
-    private async Task Pause()
+    public async Task Pause()
     {
         if (_jsModule != null) await _jsModule.InvokeVoidAsync("videoEvents", $"{Uuid}", "pause");
         _setting.IsPlaying = false;
     }
 
-    private async Task Play()
+    public async Task Play()
     {
         if (_jsModule != null) await _jsModule.InvokeVoidAsync("videoEvents", $"{Uuid}", "play");
         _setting.IsPlaying = true;
@@ -113,8 +98,38 @@
             string info = await _jsModule.InvokeAsync<string>("videoInfo", Uuid);
             if (info.Length > 0)
             {
-                Media? media = JsonSerializer.Deserialize<Media>(info);
+                Media? media = JsonConvert.DeserializeObject<Media>(info);
+                if (media != null)
+                {
+                    Sources = media;
+                    await SourcesChanged.InvokeAsync(media);
+                }
             }
+        }
+    }
+
+    #endregion
+
+    #region ComponentHandler
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Uuid ??= Guid.NewGuid().ToString();
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/RazorVideo/RzVideo.razor.js");
+            await _jsModule.InvokeVoidAsync("DOMCleanup.createObserver", _rootUuid);
+            if (PlayList is not null)
+            {
+                Sources = PlayList.First();
+            }
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            await _jsModule.DisposeAsync();
         }
     }
 
