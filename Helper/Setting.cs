@@ -25,58 +25,58 @@
             set { _playstate = !value; }
         }
 
-        private float _SoundRate = 0.5f;
+        private float _soundRate = 0.5f;
 
         public float SoundRate
         {
-            get => _SoundRate;
+            get => _soundRate;
             set
             {
-                _SoundRate = value;
-                _SoundRate = Math.Max(_SoundRate, 0);
-                _SoundRate = Math.Min(_SoundRate, 1);
+                _soundRate = value;
+                _soundRate = Math.Max(_soundRate, 0);
+                _soundRate = Math.Min(_soundRate, 1);
             }
         }
 
-        private bool _ShowingSetting = false;
-        public bool _SpeedSetting = false;
-        private bool _QualitySetting = false;
+        private bool _showingSetting = false;
+        private bool _speedSetting = false;
+        private bool _qualitySetting = false;
 
         public bool ShowingSetting
         {
-            get => _ShowingSetting;
+            get => _showingSetting;
             set
             {
-                _ShowingSetting = value;
-                if (_ShowingSetting == false)
+                _showingSetting = value;
+                if (_showingSetting == false)
                 {
-                    _SpeedSetting = _QualitySetting = false;
+                    _speedSetting = _qualitySetting = false;
                 }
             }
         }
 
         public bool SpeedSetting
         {
-            get => _SpeedSetting;
+            get => _speedSetting;
             set
             {
-                _SpeedSetting = value;
-                if (_SpeedSetting == true)
+                _speedSetting = value;
+                if (_speedSetting == true)
                 {
-                    _QualitySetting = false;
+                    _qualitySetting = false;
                 }
             }
         }
 
         public bool QualitySetting
         {
-            get => _QualitySetting;
+            get => _qualitySetting;
             set
             {
-                _QualitySetting = value;
-                if (_QualitySetting == true)
+                _qualitySetting = value;
+                if (_qualitySetting == true)
                 {
-                    _SpeedSetting = false;
+                    _speedSetting = false;
                 }
             }
         }

@@ -112,7 +112,6 @@ export async function videoInfo(elementID) {
         json["Paused"] = video.paused;
         json["PlaybackRate"] = video.playbackRate;
         json["Dimension"] = {"Height": video.videoHeight, "Width": video.videoWidth};
-        console.log(json)
         // console.log(JSON.stringify(json));
         return JSON.stringify(json);
 

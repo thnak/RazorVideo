@@ -1,5 +1,4 @@
 @using global::RazorVideo.Helper
-@using JsonSerializer = Newtonsoft.Json.JsonSerializer
 @implements IAsyncDisposable
 @inject IJSRuntime JsRuntime
 
@@ -30,6 +29,9 @@
 
     [Parameter]
     public EventCallback<Media> SourcesChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnEnded { get; set; }
 
     [Parameter]
     public string? Height { get; set; }
@@ -73,10 +75,19 @@
         await GetVideoInfo();
     }
 
-    private Task OneEnded()
+    private async Task OneEnded()
     {
         _setting.IsPlaying = false;
-        return Task.CompletedTask;
+        if (Sources.Loop)
+        {
+            await Play();
+        }
+        else
+        {
+            Sources.Paused = true;
+        }
+        await OnEnded.InvokeAsync();
+        await Task.CompletedTask;
     }
 
     public async Task Pause()
@@ -111,6 +122,7 @@
     #endregion
 
     #region ComponentHandler
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
